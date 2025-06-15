@@ -1,6 +1,7 @@
 package com.example.littlelemon
 
 import android.os.Bundle
+import android.util.Log
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -35,20 +36,35 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.LifecycleOwner
+import androidx.lifecycle.coroutineScope
+import androidx.lifecycle.lifecycleScope
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import com.example.littlelemon.LittleLemonApp.Companion.littleLemonDatabase
+import com.example.littlelemon.LittleLemonApp.Companion.userPrefer
 import com.example.littlelemon.data.PreferenceKeys
+import com.example.littlelemon.data.remote.Response
 import com.example.littlelemon.presentation.Home
 import com.example.littlelemon.presentation.OnBoarding
 import com.example.littlelemon.presentation.Profile
 import com.example.littlelemon.ui.theme.Black
 import com.example.littlelemon.ui.theme.LittleLemonTheme
 import com.example.littlelemon.ui.theme.Orange
+import io.ktor.client.call.body
+import io.ktor.client.request.get
+import io.ktor.http.URLProtocol
+import io.ktor.http.Url
+import io.ktor.http.encodedPath
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
-
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -56,8 +72,6 @@ class MainActivity : ComponentActivity() {
         setContent {
             LittleLemonTheme {
                 var startDestination = LittleLemonApp.startDestination.collectAsState()
-
-
 
                 val navController = rememberNavController()
                    AppStart(navController, startDestination.value )
@@ -68,7 +82,27 @@ class MainActivity : ComponentActivity() {
         }
 
 
+        lifecycleScope.launch(Dispatchers.IO){
 
+            if(userPrefer.getString(PreferenceKeys.EMAIL.name,"")!!.isEmpty()){
+                val response = LittleLemonApp.httpClient.get("https://raw.githubusercontent.com/Meta-Mobile-Developer-PC/Working-With-Data-API/main/menu.json")
+
+                when(response.status.value){
+                    in 200..299 ->{
+                        val menus = response.body() as Response
+
+                        if(littleLemonDatabase.menuDao().getAllMenus().isEmpty()){
+
+                            menus.menu.forEach{
+                                littleLemonDatabase.menuDao().addMenu(it)
+                            }
+                        }
+
+                    }
+                }
+            }
+
+        }
 
 
     }
@@ -87,7 +121,7 @@ enum class Routes{
  @Composable
 private fun AppStart(
      navController: NavHostController,
-     startDescriptor: String,
+     startDestination: String,
  ) {
 
     val interactionSource = remember { MutableInteractionSource() }
@@ -95,7 +129,7 @@ private fun AppStart(
     Scaffold{ innerPadding ->
         NavHost(
             modifier = Modifier.padding(innerPadding),
-            navController = navController, startDestination = startDescriptor ,
+            navController = navController, startDestination = startDestination ,
 
             ){
 

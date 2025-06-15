@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp")
+    id ("org.jetbrains.kotlin.plugin.serialization")
 
 }
 
@@ -74,5 +75,12 @@ dependencies {
     annotationProcessor("androidx.room:room-compiler:$room_version")
 
     implementation("androidx.room:room-ktx:$room_version")
+
+    val ktorVersion = "2.1.3"
+    implementation ("io.ktor:ktor-client-android:${ktorVersion}")
+    implementation ("io.ktor:ktor-client-content-negotiation:${ktorVersion}")
+    implementation ("io.ktor:ktor-serialization-kotlinx-json:${ktorVersion}")
+    implementation("io.coil-kt.coil3:coil-compose:3.2.0")
+
 
 }
