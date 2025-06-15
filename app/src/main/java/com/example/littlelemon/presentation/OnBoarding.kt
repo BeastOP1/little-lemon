@@ -1,5 +1,7 @@
 package com.example.littlelemon.presentation
 
+import android.content.Context
+import android.content.Context.MODE_PRIVATE
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -40,9 +42,13 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.core.content.edit
 import androidx.navigation.NavHostController
+import com.example.littlelemon.LittleLemonApp
+import com.example.littlelemon.MainActivity
 import com.example.littlelemon.R
 import com.example.littlelemon.Routes
+import com.example.littlelemon.data.PreferenceKeys
 import com.example.littlelemon.ui.theme.Black
 import com.example.littlelemon.ui.theme.DarkGrey
 import com.example.littlelemon.ui.theme.Grey
@@ -52,14 +58,28 @@ import com.example.littlelemon.ui.theme.White
 import com.example.littlelemon.ui.theme.Yellow
 
 @Composable
-fun OnBoarding(modifier: Modifier = Modifier, navController: NavHostController) {
+fun OnBoarding(
+    modifier: Modifier = Modifier,
+    navController: NavHostController,
+) {
 
     val interactionSource = remember { MutableInteractionSource() }
 
     var firstName by remember { mutableStateOf("") }
-    val context = LocalContext.current
     var lastName by remember { mutableStateOf("") }
     var email by remember { mutableStateOf("") }
+
+    val userPreference = LittleLemonApp.userPrefer
+
+
+    fun writeUser(firstName: String, lastName: String, email: String){
+        userPreference.edit{
+            putString(PreferenceKeys.FIRST_NAME.name, firstName)
+            putString(PreferenceKeys.LAST_NAME.name, lastName)
+            putString(PreferenceKeys.EMAIL.name, email)
+            apply()
+        }
+    }
     Column(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -166,8 +186,10 @@ fun OnBoarding(modifier: Modifier = Modifier, navController: NavHostController) 
 
 
             Button(
-                onClick = {navController.navigate(Routes.PROFILE.name)
-                          },
+                onClick = {
+                    writeUser(firstName,lastName,email)
+                    LittleLemonApp.startDestination.value = Routes.HOME.name
+                 },
                 colors = ButtonDefaults.filledTonalButtonColors(
                     containerColor = Yellow,
                     contentColor = if(isSystemInDarkTheme()) White else Black

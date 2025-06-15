@@ -1,5 +1,6 @@
 package com.example.littlelemon.presentation
 
+import android.content.Context.MODE_PRIVATE
 import android.widget.Toast
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.Image
@@ -9,6 +10,7 @@ import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -16,12 +18,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.wrapContentHeight
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.KeyboardArrowLeft
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedIconButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
@@ -40,8 +48,11 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.tooling.preview.PreviewLightDark
 import androidx.compose.ui.unit.dp
+import androidx.core.content.edit
 import androidx.navigation.NavHostController
+import com.example.littlelemon.LittleLemonApp
 import com.example.littlelemon.R
+import com.example.littlelemon.data.PreferenceKeys
 import com.example.littlelemon.ui.theme.Black
 import com.example.littlelemon.ui.theme.Grey
 import com.example.littlelemon.ui.theme.LittleLemonTheme
@@ -53,11 +64,23 @@ import com.example.littlelemon.ui.theme.Yellow
 @Composable
 fun Profile(modifier: Modifier = Modifier, navController: NavHostController) {
     val interactionSource = remember { MutableInteractionSource() }
+    val userPreference = LittleLemonApp.userPrefer
 
-    var firstName by remember { mutableStateOf("") }
+    var firstName = userPreference.getString(PreferenceKeys.FIRST_NAME.name,"")!!
     val context = LocalContext.current
-    var lastName by remember { mutableStateOf("") }
-    var email by remember { mutableStateOf("") }
+    var lastName=  userPreference.getString(PreferenceKeys.LAST_NAME.name,"")!!
+    var email= userPreference.getString(PreferenceKeys.EMAIL.name,"")!!
+
+
+    fun clearUser(){
+        userPreference.edit{
+            remove(PreferenceKeys.FIRST_NAME.name)
+            remove(PreferenceKeys.LAST_NAME.name)
+            remove(PreferenceKeys.EMAIL.name)
+            apply()
+        }
+        LittleLemonApp.startDestination.value = "register"
+    }
     Column(
         modifier = Modifier.fillMaxSize().background(MaterialTheme.colorScheme.background),
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -77,7 +100,25 @@ fun Profile(modifier: Modifier = Modifier, navController: NavHostController) {
 
         ) {
 
-            Text(text = "Personal information", style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold),modifier = Modifier.padding())
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(5.dp)
+
+            ) {
+                OutlinedIconButton(
+
+                    onClick = {
+                        navController.popBackStack()
+                              },
+                    border = BorderStroke(width = 1.dp,Yellow,)
+                ) {
+
+                    Icon(imageVector = Icons.Filled.KeyboardArrowLeft, contentDescription = null, tint = MaterialTheme.colorScheme.onBackground)
+
+                }
+                Text(text = "Personal information", style = MaterialTheme.typography.titleLarge.copy(color = MaterialTheme.colorScheme.onBackground, fontWeight = FontWeight.SemiBold),modifier = Modifier.padding())
+
+            }
             Column(
                 modifier = Modifier.wrapContentHeight(),
                 verticalArrangement = Arrangement.spacedBy(30.dp)
@@ -158,8 +199,7 @@ fun Profile(modifier: Modifier = Modifier, navController: NavHostController) {
 
             Button(
                 onClick = {
-                    navController.navigateUp()
-                    Toast.makeText(context,"Clicked",Toast.LENGTH_SHORT).show()
+                    clearUser()
                 },
                 colors = ButtonDefaults.filledTonalButtonColors(
                     containerColor = Yellow,
